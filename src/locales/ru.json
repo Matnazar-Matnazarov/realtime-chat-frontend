@@ -1,0 +1,51 @@
+{
+  "common": {
+    "login": "Войти",
+    "logout": "Выйти",
+    "register": "Регистрация",
+    "email": "Email",
+    "password": "Пароль",
+    "username": "Имя пользователя",
+    "submit": "Отправить",
+    "cancel": "Отмена",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "search": "Поиск",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "success": "Успешно",
+    "welcome": "Добро пожаловать"
+  },
+  "auth": {
+    "loginTitle": "Войдите в свой аккаунт",
+    "registerTitle": "Создать аккаунт",
+    "loginSuccess": "Успешный вход!",
+    "loginFailed": "Ошибка входа",
+    "logoutSuccess": "Успешный выход",
+    "invalidCredentials": "Неверное имя пользователя или пароль"
+  },
+  "chat": {
+    "title": "Чат",
+    "sendMessage": "Отправить сообщение",
+    "noMessages": "Пока нет сообщений",
+    "typeMessage": "Введите сообщение...",
+    "selectContact": "Выберите контакт для начала чата",
+    "noContacts": "Пока нет контактов",
+    "noResults": "Ничего не найдено",
+    "online": "В сети",
+    "lastSeen": "Был(а) в сети"
+  },
+  "admin": {
+    "title": "Панель администратора",
+    "statistics": "Статистика",
+    "users": "Пользователи",
+    "groups": "Группы",
+    "messages": "Сообщения"
+  },
+  "theme": {
+    "light": "Светлая",
+    "dark": "Темная",
+    "system": "Системная"
+  }
+}

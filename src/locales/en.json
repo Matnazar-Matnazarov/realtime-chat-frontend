@@ -1,0 +1,51 @@
+{
+  "common": {
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "username": "Username",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "welcome": "Welcome"
+  },
+  "auth": {
+    "loginTitle": "Login to your account",
+    "registerTitle": "Create an account",
+    "loginSuccess": "Login successful!",
+    "loginFailed": "Login failed",
+    "logoutSuccess": "Logged out successfully",
+    "invalidCredentials": "Invalid username or password"
+  },
+  "chat": {
+    "title": "Chat",
+    "sendMessage": "Send message",
+    "noMessages": "No messages yet",
+    "typeMessage": "Type a message...",
+    "selectContact": "Select a contact to start chatting",
+    "noContacts": "No contacts yet",
+    "noResults": "No results found",
+    "online": "Online",
+    "lastSeen": "Last seen"
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "statistics": "Statistics",
+    "users": "Users",
+    "groups": "Groups",
+    "messages": "Messages"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  }
+}

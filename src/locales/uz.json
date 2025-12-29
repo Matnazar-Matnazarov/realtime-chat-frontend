@@ -1,0 +1,51 @@
+{
+  "common": {
+    "login": "Kirish",
+    "logout": "Chiqish",
+    "register": "Ro'yxatdan o'tish",
+    "email": "Email",
+    "password": "Parol",
+    "username": "Foydalanuvchi nomi",
+    "submit": "Yuborish",
+    "cancel": "Bekor qilish",
+    "save": "Saqlash",
+    "delete": "O'chirish",
+    "edit": "Tahrirlash",
+    "search": "Qidirish",
+    "loading": "Yuklanmoqda...",
+    "error": "Xato",
+    "success": "Muvaffaqiyatli",
+    "welcome": "Xush kelibsiz"
+  },
+  "auth": {
+    "loginTitle": "Hisobingizga kiring",
+    "registerTitle": "Hisob yarating",
+    "loginSuccess": "Muvaffaqiyatli kirildi!",
+    "loginFailed": "Kirish muvaffaqiyatsiz",
+    "logoutSuccess": "Muvaffaqiyatli chiqildi",
+    "invalidCredentials": "Noto'g'ri foydalanuvchi nomi yoki parol"
+  },
+  "chat": {
+    "title": "Chat",
+    "sendMessage": "Xabar yuborish",
+    "noMessages": "Hali xabar yo'q",
+    "typeMessage": "Xabar yozing...",
+    "selectContact": "Chat qilish uchun kontakt tanlang",
+    "noContacts": "Hali kontaktlar yo'q",
+    "noResults": "Hech narsa topilmadi",
+    "online": "Onlayn",
+    "lastSeen": "Oxirgi marta ko'rilgan"
+  },
+  "admin": {
+    "title": "Admin paneli",
+    "statistics": "Statistika",
+    "users": "Foydalanuvchilar",
+    "groups": "Guruhlar",
+    "messages": "Xabarlar"
+  },
+  "theme": {
+    "light": "Yorug'",
+    "dark": "Qorong'i",
+    "system": "Tizim"
+  }
+}
