@@ -47,4 +47,11 @@ export const chatService = {
   markAsRead: async (messageId: string): Promise<void> => {
     await api.patch(`/api/v1/messages/${messageId}/read`)
   },
+
+  addContact: async (contactId: string, nickname?: string): Promise<void> => {
+    await api.post('/api/v1/contacts', {
+      contact_id: contactId,
+      nickname: nickname || null,
+    })
+  },
 }

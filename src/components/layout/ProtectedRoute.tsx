@@ -14,8 +14,8 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const hasCheckedAuth = useRef(false)
 
   useEffect(() => {
-    // Only check auth once on mount if not authenticated
-    if (!isAuthenticated && !user && !hasCheckedAuth.current) {
+    // Check auth if user is not loaded (even if isAuthenticated is true)
+    if (!user && !hasCheckedAuth.current) {
       hasCheckedAuth.current = true
       const checkAuth = async () => {
         try {
@@ -29,8 +29,10 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
                 accessToken: token,
               })
             )
+            console.log('✅ User loaded in ProtectedRoute:', currentUser.id)
           }
-        } catch {
+        } catch (error) {
+          console.error('❌ Failed to load user in ProtectedRoute:', error)
           // If we can't get user, silently fail - will redirect to login
           hasCheckedAuth.current = false
         }
