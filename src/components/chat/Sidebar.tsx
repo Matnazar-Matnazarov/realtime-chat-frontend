@@ -52,22 +52,113 @@ export function Sidebar({ selectedUserId, onSelectUser }: SidebarProps) {
 
   // WebSocket handlers
   const handleWebSocketMessage = (message: Message) => {
-    // Update last message in contacts
+    // Determine contact ID (the other user in the conversation)
+    const contactId =
+      message.sender_id === currentUser?.id ? message.receiver_id : message.sender_id
+
+    if (!contactId) return
+
     setContacts((prev) => {
-      const contactId =
-        message.sender_id === currentUser?.id ? message.receiver_id : message.sender_id
+      // Check if contact already exists
+      const existingContactIndex = prev.findIndex((contact) => contact.id === contactId)
 
-      if (!contactId) return prev
-
-      return prev.map((contact) => {
-        if (contact.id === contactId) {
-          return {
-            ...contact,
-            lastMessage: message,
-          }
+      if (existingContactIndex >= 0) {
+        // Update existing contact with new last message
+        const updated = [...prev]
+        updated[existingContactIndex] = {
+          ...updated[existingContactIndex],
+          lastMessage: message,
+          // Update unread count if message is not from current user
+          unreadCount:
+            message.sender_id !== currentUser?.id
+              ? updated[existingContactIndex].unreadCount + 1
+              : updated[existingContactIndex].unreadCount,
         }
-        return contact
-      })
+        // Sort by last message time (most recent first)
+        return updated.sort((a, b) => {
+          if (!a.lastMessage && !b.lastMessage) return 0
+          if (!a.lastMessage) return 1
+          if (!b.lastMessage) return -1
+          return (
+            new Date(b.lastMessage.created_at).getTime() -
+            new Date(a.lastMessage.created_at).getTime()
+          )
+        })
+      } else {
+        // New contact - create entry with sender info from message
+        // Determine which user info to use (sender or receiver)
+        const otherUserInfo =
+          message.sender_id === currentUser?.id
+            ? null // We need to fetch receiver info
+            : message.sender || {
+                id: message.sender_id,
+                email: '',
+                username: '',
+                is_active: true,
+                is_verified: false,
+                is_superuser: false,
+              }
+
+        // If we don't have user info, fetch it asynchronously
+        if (!otherUserInfo) {
+          // Fetch user info in background
+          api
+            .get<User>(`/api/v1/users/${contactId}`)
+            .then((response) => {
+              const fetchedUser = response.data
+              setContacts((prevContacts) => {
+                const existingIndex = prevContacts.findIndex((c) => c.id === contactId)
+                if (existingIndex >= 0) {
+                  // Update existing contact with fetched user info
+                  const updated = [...prevContacts]
+                  updated[existingIndex] = {
+                    ...updated[existingIndex],
+                    user: {
+                      ...fetchedUser,
+                      is_online: onlineUsers.has(contactId),
+                    },
+                  }
+                  return updated
+                }
+                return prevContacts
+              })
+            })
+            .catch((error) => {
+              console.error('Failed to fetch user info:', error)
+            })
+        }
+
+        const newContact: ChatContact = {
+          id: contactId,
+          user: otherUserInfo
+            ? {
+                ...otherUserInfo,
+                is_online: onlineUsers.has(contactId),
+              }
+            : {
+                id: contactId,
+                email: '',
+                username: '',
+                is_active: true,
+                is_verified: false,
+                is_superuser: false,
+                is_online: onlineUsers.has(contactId),
+              },
+          lastMessage: message,
+          unreadCount: message.sender_id !== currentUser?.id ? 1 : 0,
+        }
+        // Add new contact and sort
+        const updated = [...prev, newContact]
+        return updated.sort((a, b) => {
+          if (!a.lastMessage && !b.lastMessage) return 0
+          if (!a.lastMessage) return 1
+          if (!b.lastMessage) return -1
+          return (
+            new Date(b.lastMessage.created_at).getTime() -
+            new Date(a.lastMessage.created_at).getTime()
+          )
+        })
+      }
     })
   }
 
@@ -171,7 +262,24 @@ export function Sidebar({ selectedUserId, onSelectUser }: SidebarProps) {
     }
   }
 
-  const handleSelectUser = (userId: string) => {
+  const handleSelectUser = async (userId: string) => {
+    // If user is from search results, add to contacts if not already a contact
+    if (searchQuery.trim().length > 0) {
+      const isExistingContact = contacts.some((contact) => contact.id === userId)
+      if (!isExistingContact) {
+        try {
+          await chatService.addContact(userId)
+          // Reload contacts to show the new contact
+          await loadContacts()
+          toast.success(t('chat.contactAdded'))
+        } catch (error: any) {
+          // If contact already exists or other error, just continue
+          if (error.response?.status !== 400) {
+            console.error('Failed to add contact:', error)
+          }
+        }
+      }
+    }
     onSelectUser(userId)
     setSearchQuery('')
     setSearchResults([])

@@ -34,7 +34,8 @@
     "noContacts": "No contacts yet",
     "noResults": "No results found",
     "online": "Online",
-    "lastSeen": "Last seen"
+    "lastSeen": "Last seen",
+    "contactAdded": "Contact added successfully"
   },
   "admin": {
     "title": "Admin Dashboard",

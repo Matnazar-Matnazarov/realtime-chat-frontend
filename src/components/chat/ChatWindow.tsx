@@ -27,20 +27,46 @@ export function ChatWindow({ userId, user, onMessageSent }: ChatWindowProps) {
 
   // WebSocket connection
   const handleWebSocketMessage = (message: Message) => {
+    console.log('📬 ChatWindow received WebSocket message:', {
+      messageId: message.id,
+      senderId: message.sender_id,
+      receiverId: message.receiver_id,
+      currentUserId: currentUser?.id,
+      selectedUserId: userId,
+    })
+
     // Only add message if it's for this chat
-    if (
-      (message.receiver_id === userId && message.sender_id === currentUser?.id) ||
-      (message.sender_id === userId && message.receiver_id === currentUser?.id) ||
-      (message.receiver_id === currentUser?.id && message.sender_id === userId)
-    ) {
+    // Check if message is between current user and selected user
+    const isForThisChat =
+      userId &&
+      ((message.receiver_id === userId && message.sender_id === currentUser?.id) ||
+        (message.sender_id === userId && message.receiver_id === currentUser?.id))
+
+    console.log('🔍 Is message for this chat?', isForThisChat)
+
+    if (isForThisChat) {
       setMessages((prev) => {
-        // Avoid duplicates
+        // Avoid duplicates by checking message ID
         if (prev.some((m) => m.id === message.id)) {
+          console.log('⚠️ Duplicate message detected, skipping:', message.id)
           return prev
         }
-        return [...prev, message]
+        console.log('✅ Adding new message to chat:', message.id)
+        // Insert message in correct position (sorted by created_at)
+        const newMessages = [...prev, message].sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        )
+        return newMessages
       })
       scrollToBottom()
+
+      // Notify parent component about new message
+      if (onMessageSent) {
+        onMessageSent(message)
+      }
+    } else {
+      console.log('❌ Message not for this chat, ignoring')
     }
   }
 
@@ -76,12 +102,51 @@ export function ChatWindow({ userId, user, onMessageSent }: ChatWindowProps) {
   const sendMessage = async () => {
     if (!messageText.trim() || !userId || isSending) return
 
+    const messageContent = messageText.trim()
+    setMessageText('') // Clear input immediately for better UX
+
     try {
       setIsSending(true)
-      const newMessage = await chatService.sendMessage(messageText, userId)
-      setMessages((prev) => [...prev, newMessage])
-      setMessageText('')
+      // Optimistic update - add message immediately
+      const tempId = `temp-${Date.now()}`
+      const optimisticMessage: Message = {
+        id: tempId,
+        content: messageContent,
+        sender_id: currentUser?.id || '',
+        receiver_id: userId,
+        group_id: undefined,
+        media_url: undefined,
+        media_type: undefined,
+        is_read: false,
+        created_at: new Date().toISOString(),
+        sender: currentUser || undefined,
+      }
+
+      // Add optimistic message
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === tempId)) {
+          return prev
+        }
+        return [...prev, optimisticMessage]
+      })
       scrollToBottom()
+
+      // Send message to server
+      const newMessage = await chatService.sendMessage(messageContent, userId)
+
+      // Replace optimistic message with real message from server
+      setMessages((prev) => {
+        // Remove optimistic message
+        const withoutTemp = prev.filter((m) => m.id !== tempId)
+        // Add real message if not already present (WebSocket might have added it)
+        if (!withoutTemp.some((m) => m.id === newMessage.id)) {
+          return [...withoutTemp, newMessage].sort(
+            (a, b) =>
+              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          )
+        }
+        return withoutTemp
+      })
 
       // Notify parent component
       if (onMessageSent) {
@@ -90,6 +155,10 @@ export function ChatWindow({ userId, user, onMessageSent }: ChatWindowProps) {
     } catch (error) {
       console.error('Failed to send message:', error)
       toast.error(t('common.error'))
+      // Restore message text on error
+      setMessageText(messageContent)
+      // Remove optimistic message on error
+      setMessages((prev) => prev.filter((m) => !m.id.startsWith('temp-')))
     } finally {
       setIsSending(false)
     }
