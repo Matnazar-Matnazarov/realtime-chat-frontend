@@ -1,14 +1,23 @@
 import { useState, useEffect, useRef } from 'react'
-import { Send, Paperclip } from 'lucide-react'
+import { Send, Paperclip, X, Video } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  VisuallyHidden,
+} from '@/components/ui/dialog'
 import { chatService } from '@/services/chatService'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import type { User, Message } from '@/types'
 import { useAuth } from '@/hooks/useAuth'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
 
 interface ChatWindowProps {
   userId: string | null
@@ -23,7 +32,13 @@ export function ChatWindow({ userId, user, onMessageSent }: ChatWindowProps) {
   const [messageText, setMessageText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isSending, setIsSending] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [filePreview, setFilePreview] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [mediaModalOpen, setMediaModalOpen] = useState(false)
+  const [selectedMedia, setSelectedMedia] = useState<{ url: string; type: string } | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // WebSocket connection
   const handleWebSocketMessage = (message: Message) => {
@@ -99,24 +114,87 @@ export function ChatWindow({ userId, user, onMessageSent }: ChatWindowProps) {
     }
   }
 
-  const sendMessage = async () => {
-    if (!messageText.trim() || !userId || isSending) return
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
 
-    const messageContent = messageText.trim()
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm']
+    if (!allowedTypes.includes(file.type)) {
+      toast.error(t('chat.invalidFileType'))
+      return
+    }
+
+    // Validate file size (10MB)
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    if (file.size > maxSize) {
+      toast.error(t('chat.fileTooLarge'))
+      return
+    }
+
+    setSelectedFile(file)
+
+    // Create preview for images
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setFilePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    } else {
+      setFilePreview(null)
+    }
+  }
+
+  const removeSelectedFile = () => {
+    setSelectedFile(null)
+    setFilePreview(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const sendMessage = async () => {
+    if ((!messageText.trim() && !selectedFile) || !userId || isSending || isUploading) return
+
+    const messageContent = messageText.trim() || ''
     setMessageText('') // Clear input immediately for better UX
+
+    let mediaUrl: string | undefined
+    let mediaType: string | undefined
 
     try {
       setIsSending(true)
+
+      // Upload file if selected
+      if (selectedFile) {
+        setIsUploading(true)
+        try {
+          const uploadResult = await chatService.uploadFile(selectedFile)
+          mediaUrl = uploadResult.url
+          mediaType = uploadResult.content_type
+          removeSelectedFile()
+        } catch (error) {
+          console.error('Failed to upload file:', error)
+          toast.error(t('chat.uploadFailed'))
+          setIsUploading(false)
+          setIsSending(false)
+          return
+        } finally {
+          setIsUploading(false)
+        }
+      }
+
       // Optimistic update - add message immediately
       const tempId = `temp-${Date.now()}`
       const optimisticMessage: Message = {
         id: tempId,
-        content: messageContent,
+        content: messageContent || (mediaUrl ? (mediaType?.startsWith('image/') ? '📷 Image' : '🎥 Video') : ''),
         sender_id: currentUser?.id || '',
         receiver_id: userId,
         group_id: undefined,
-        media_url: undefined,
-        media_type: undefined,
+        media_url: mediaUrl,
+        media_type: mediaType,
         is_read: false,
         created_at: new Date().toISOString(),
         sender: currentUser || undefined,
@@ -132,7 +210,9 @@ export function ChatWindow({ userId, user, onMessageSent }: ChatWindowProps) {
       scrollToBottom()
 
       // Send message to server
-      const newMessage = await chatService.sendMessage(messageContent, userId)
+      const newMessage = mediaUrl
+        ? await chatService.sendMessageWithMedia(messageContent, mediaUrl, mediaType!, userId)
+        : await chatService.sendMessage(messageContent, userId)
 
       // Replace optimistic message with real message from server
       setMessages((prev) => {
@@ -236,7 +316,54 @@ export function ChatWindow({ userId, user, onMessageSent }: ChatWindowProps) {
                         {message.sender.username || message.sender.email}
                       </p>
                     )}
-                    <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                    {/* Media display */}
+                    {message.media_url && (
+                      <div className="mb-2 rounded-lg overflow-hidden max-w-full">
+                        {message.media_type?.startsWith('image/') ? (
+                          <img
+                            src={`${API_BASE_URL}${message.media_url}`}
+                            alt={message.content || 'Image'}
+                            className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => {
+                              setSelectedMedia({
+                                url: `${API_BASE_URL}${message.media_url}`,
+                                type: message.media_type || 'image',
+                              })
+                              setMediaModalOpen(true)
+                            }}
+                            onError={(e) => {
+                              // Fallback if image fails to load
+                              const target = e.target as HTMLImageElement
+                              target.style.display = 'none'
+                            }}
+                          />
+                        ) : message.media_type?.startsWith('video/') ? (
+                          <div className="relative">
+                            <video
+                              src={`${API_BASE_URL}${message.media_url}`}
+                              controls
+                              className="max-w-full h-auto rounded-lg"
+                              style={{ maxHeight: '400px' }}
+                              onDoubleClick={() => {
+                                setSelectedMedia({
+                                  url: `${API_BASE_URL}${message.media_url}`,
+                                  type: message.media_type || 'video',
+                                })
+                                setMediaModalOpen(true)
+                              }}
+                            >
+                              {t('chat.videoNotSupported')}
+                            </video>
+                            <div className="absolute bottom-2 right-2 bg-black/50 text-white px-2 py-1 rounded text-xs opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
+                              {t('chat.doubleClickForFullscreen')}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+                    {message.content && (
+                      <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                    )}
                     <p className="text-xs mt-1 opacity-70">
                       {new Date(message.created_at).toLocaleTimeString([], {
                         hour: '2-digit',
@@ -252,10 +379,58 @@ export function ChatWindow({ userId, user, onMessageSent }: ChatWindowProps) {
         )}
       </ScrollArea>
 
+      {/* File Preview */}
+      {selectedFile && (
+        <div className="px-4 py-2 border-t bg-muted/20 flex-shrink-0">
+          <div className="flex items-center gap-2 p-2 bg-background rounded-lg border border-border">
+            {filePreview ? (
+              <img
+                src={filePreview}
+                alt="Preview"
+                className="w-16 h-16 object-cover rounded"
+              />
+            ) : (
+              <div className="w-16 h-16 bg-muted rounded flex items-center justify-center">
+                <Video className="h-6 w-6 text-muted-foreground" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">
+                {selectedFile.name}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={removeSelectedFile}
+              className="flex-shrink-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Message Input */}
       <div className="p-4 border-t bg-muted/30 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="flex-shrink-0">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="flex-shrink-0"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isSending || isUploading}
+          >
             <Paperclip className="h-5 w-5" />
           </Button>
           <Input
@@ -264,19 +439,66 @@ export function ChatWindow({ userId, user, onMessageSent }: ChatWindowProps) {
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             onKeyPress={handleKeyPress}
-            disabled={isSending}
+            disabled={isSending || isUploading}
             className="flex-1 bg-background border-border"
           />
           <Button
             onClick={sendMessage}
-            disabled={!messageText.trim() || isSending}
+            disabled={(!messageText.trim() && !selectedFile) || isSending || isUploading}
             size="icon"
             className="flex-shrink-0"
           >
-            <Send className="h-5 w-5" />
+            {isUploading ? (
+              <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Send className="h-5 w-5" />
+            )}
           </Button>
         </div>
       </div>
+
+      {/* Media Modal */}
+      <Dialog open={mediaModalOpen} onOpenChange={setMediaModalOpen}>
+        <DialogContent className="max-w-6xl w-[95vw] max-h-[95vh] p-0 bg-transparent border-0 shadow-none">
+          <VisuallyHidden>
+            <DialogTitle>
+              {selectedMedia?.type.startsWith('image/') ? 'Image preview' : 'Video preview'}
+            </DialogTitle>
+          </VisuallyHidden>
+          <DialogDescription className="sr-only">
+            {selectedMedia?.type.startsWith('image/') ? 'Image preview' : 'Video preview'}
+          </DialogDescription>
+          {selectedMedia && (
+            <div className="relative w-full h-full flex items-center justify-center bg-black/95 rounded-lg overflow-hidden">
+              {selectedMedia.type.startsWith('image/') ? (
+                <img
+                  src={selectedMedia.url}
+                  alt="Preview"
+                  className="max-w-full max-h-[95vh] w-auto h-auto object-contain"
+                  onClick={(e) => e.stopPropagation()}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.style.display = 'none'
+                  }}
+                />
+              ) : selectedMedia.type.startsWith('video/') ? (
+                <video
+                  src={selectedMedia.url}
+                  controls
+                  autoPlay
+                  className="max-w-full max-h-[95vh] w-auto h-auto"
+                  onClick={(e) => e.stopPropagation()}
+                  onError={(e) => {
+                    console.error('Video load error:', e)
+                  }}
+                >
+                  {t('chat.videoNotSupported')}
+                </video>
+              ) : null}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

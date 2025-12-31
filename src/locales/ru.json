@@ -34,7 +34,14 @@
     "noContacts": "Пока нет контактов",
     "noResults": "Ничего не найдено",
     "online": "В сети",
-    "lastSeen": "Был(а) в сети"
+    "lastSeen": "Был(а) в сети",
+    "contactAdded": "Контакт успешно добавлен",
+    "invalidFileType": "Неверный тип файла. Разрешены только изображения (JPEG, PNG, GIF, WebP) и видео (MP4, WebM).",
+    "fileTooLarge": "Размер файла превышает лимит 10MB.",
+    "uploadFailed": "Не удалось загрузить файл. Попробуйте еще раз.",
+    "videoNotSupported": "Ваш браузер не поддерживает тег video.",
+    "clickToViewFullscreen": "Нажмите для просмотра в полноэкранном режиме",
+    "doubleClickForFullscreen": "Двойной клик для полноэкранного режима"
   },
   "admin": {
     "title": "Панель администратора",

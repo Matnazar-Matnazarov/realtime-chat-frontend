@@ -178,7 +178,7 @@ export function useWebSocket(
         wsRef.current = null
       }
       if (reconnectTimeoutRef.current !== undefined) {
-        clearTimeout(reconnectTimeoutRef.current)
+        clearTimeout(reconnectTimeoutRef.current)       
         reconnectTimeoutRef.current = undefined
       }
     }

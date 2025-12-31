@@ -34,7 +34,14 @@
     "noContacts": "Hali kontaktlar yo'q",
     "noResults": "Hech narsa topilmadi",
     "online": "Onlayn",
-    "lastSeen": "Oxirgi marta ko'rilgan"
+    "lastSeen": "Oxirgi marta ko'rilgan",
+    "contactAdded": "Kontakt muvaffaqiyatli qo'shildi",
+    "invalidFileType": "Noto'g'ri fayl turi. Faqat rasmlar (JPEG, PNG, GIF, WebP) va videolar (MP4, WebM) ruxsat etiladi.",
+    "fileTooLarge": "Fayl hajmi 10MB chegarasidan oshib ketdi.",
+    "uploadFailed": "Fayl yuklanmadi. Iltimos, qayta urinib ko'ring.",
+    "videoNotSupported": "Sizning brauzeringiz video tegni qo'llab-quvvatlamaydi.",
+    "clickToViewFullscreen": "To'liq ekranda ko'rish uchun bosing",
+    "doubleClickForFullscreen": "To'liq ekranda ko'rish uchun ikki marta bosing"
   },
   "admin": {
     "title": "Admin paneli",
