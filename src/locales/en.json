@@ -35,7 +35,13 @@
     "noResults": "No results found",
     "online": "Online",
     "lastSeen": "Last seen",
-    "contactAdded": "Contact added successfully"
+    "contactAdded": "Contact added successfully",
+    "invalidFileType": "Invalid file type. Only images (JPEG, PNG, GIF, WebP) and videos (MP4, WebM) are allowed.",
+    "fileTooLarge": "File size exceeds 10MB limit.",
+    "uploadFailed": "Failed to upload file. Please try again.",
+    "videoNotSupported": "Your browser does not support the video tag.",
+    "clickToViewFullscreen": "Click to view fullscreen",
+    "doubleClickForFullscreen": "Double-click for fullscreen"
   },
   "admin": {
     "title": "Admin Dashboard",
