@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -74,6 +75,13 @@ export const LoginPage = () => {
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? t('common.loading') : t('common.login')}
             </Button>
+
+            <div className="text-center text-sm text-muted-foreground">
+              {t('auth.dontHaveAccount')}{' '}
+              <Link to="/register" className="text-primary hover:underline">
+                {t('common.register')}
+              </Link>
+            </div>
           </form>
         </CardContent>
       </Card>

@@ -6,6 +6,8 @@
     "email": "Email",
     "password": "Пароль",
     "username": "Имя пользователя",
+    "firstName": "Имя",
+    "lastName": "Фамилия",
     "submit": "Отправить",
     "cancel": "Отмена",
     "save": "Сохранить",
@@ -20,10 +22,22 @@
   "auth": {
     "loginTitle": "Войдите в свой аккаунт",
     "registerTitle": "Создать аккаунт",
+    "registerDescription": "Введите свои данные для создания аккаунта",
     "loginSuccess": "Успешный вход!",
     "loginFailed": "Ошибка входа",
     "logoutSuccess": "Успешный выход",
-    "invalidCredentials": "Неверное имя пользователя или пароль"
+    "invalidCredentials": "Неверное имя пользователя или пароль",
+    "confirmPassword": "Подтвердите пароль",
+    "alreadyHaveAccount": "Уже есть аккаунт?",
+    "dontHaveAccount": "Нет аккаунта?"
+  },
+  "profile": {
+    "title": "Настройки профиля",
+    "description": "Обновите информацию о своем профиле",
+    "avatarUrl": "URL аватара",
+    "emailCannotChange": "Email нельзя изменить",
+    "updateSuccess": "Профиль успешно обновлен",
+    "updateError": "Не удалось обновить профиль"
   },
   "chat": {
     "title": "Чат",
