@@ -112,7 +112,7 @@ export function useWebSocket(
               group_id: data.group_id,
               media_url: data.media_url,
               media_type: data.media_type,
-              is_read: false,
+              is_read: data.is_read ?? false, // Use backend value or default to false
               created_at: data.created_at,
               sender: data.sender,
             }

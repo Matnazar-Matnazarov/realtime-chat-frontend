@@ -23,6 +23,24 @@ export const chatService = {
     return response.data
   },
 
+  getChatList: async (): Promise<ChatContact[]> => {
+    const response = await api.get<Array<{
+      id: string
+      user: User
+      last_message?: Message
+      unread_count: number
+      is_contact: boolean
+    }>>('/api/v1/contacts/chats')
+    
+    // Transform to ChatContact format
+    return response.data.map((item) => ({
+      id: item.id,
+      user: item.user,
+      lastMessage: item.last_message,
+      unreadCount: item.unread_count || 0,
+    }))
+  },
+
   getMessages: async (receiverId?: string, limit = 50, offset = 0): Promise<Message[]> => {
     const params = new URLSearchParams()
     if (receiverId) params.append('receiver_id', receiverId)

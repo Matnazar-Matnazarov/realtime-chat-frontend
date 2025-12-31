@@ -90,10 +90,31 @@ export function ChatWindow({ userId, user, onMessageSent }: ChatWindowProps) {
   useEffect(() => {
     if (userId) {
       loadMessages()
+      // Mark all messages as read when opening chat
+      markAllAsRead()
     } else {
       setMessages([])
     }
   }, [userId])
+
+  const markAllAsRead = async () => {
+    if (!userId) return
+    
+    try {
+      // Get unread messages
+      const messages = await chatService.getMessages(userId, 100, 0)
+      const unreadMessages = messages.filter(
+        (msg) => !msg.is_read && msg.receiver_id === currentUser?.id
+      )
+      
+      // Mark each as read
+      await Promise.all(
+        unreadMessages.map((msg) => chatService.markAsRead(msg.id))
+      )
+    } catch (error) {
+      console.error('Failed to mark messages as read:', error)
+    }
+  }
 
   useEffect(() => {
     scrollToBottom()
