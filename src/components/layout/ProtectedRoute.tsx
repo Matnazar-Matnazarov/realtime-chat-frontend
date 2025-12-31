@@ -19,17 +19,40 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       hasCheckedAuth.current = true
       const checkAuth = async () => {
         try {
-          const currentUser = await authService.getCurrentUser()
-          // If we can get user, we're authenticated via cookies
-          const token = sessionStorage.getItem('access_token')
-          if (token) {
-            dispatch(
-              setCredentials({
-                user: currentUser,
-                accessToken: token,
-              })
-            )
-            console.log('✅ User loaded in ProtectedRoute:', currentUser.id)
+          // First try to get current user
+          let currentUser
+          let token = sessionStorage.getItem('access_token')
+          
+          try {
+            currentUser = await authService.getCurrentUser()
+          } catch (error) {
+            // If getCurrentUser fails, try to refresh token
+            console.log('🔄 getCurrentUser failed, trying to refresh token...')
+            try {
+              const refreshResponse = await authService.refreshToken()
+              token = refreshResponse.access_token
+              sessionStorage.setItem('access_token', token)
+              // Try again with new token
+              currentUser = await authService.getCurrentUser()
+            } catch (refreshError) {
+              console.error('❌ Failed to refresh token:', refreshError)
+              hasCheckedAuth.current = false
+              return
+            }
+          }
+          
+          // If we have user, set credentials
+          if (currentUser) {
+            const finalToken = token || sessionStorage.getItem('access_token')
+            if (finalToken) {
+              dispatch(
+                setCredentials({
+                  user: currentUser,
+                  accessToken: finalToken,
+                })
+              )
+              console.log('✅ User loaded in ProtectedRoute:', currentUser.id)
+            }
           }
         } catch (error) {
           console.error('❌ Failed to load user in ProtectedRoute:', error)
@@ -37,7 +60,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           hasCheckedAuth.current = false
         }
       }
-      checkAuth()
+      void checkAuth()
     }
   }, [isAuthenticated, user, dispatch])
 

@@ -6,6 +6,8 @@
     "email": "Email",
     "password": "Password",
     "username": "Username",
+    "firstName": "First Name",
+    "lastName": "Last Name",
     "submit": "Submit",
     "cancel": "Cancel",
     "save": "Save",
@@ -20,10 +22,22 @@
   "auth": {
     "loginTitle": "Login to your account",
     "registerTitle": "Create an account",
+    "registerDescription": "Enter your information to create an account",
     "loginSuccess": "Login successful!",
     "loginFailed": "Login failed",
     "logoutSuccess": "Logged out successfully",
-    "invalidCredentials": "Invalid username or password"
+    "invalidCredentials": "Invalid username or password",
+    "confirmPassword": "Confirm Password",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?"
+  },
+  "profile": {
+    "title": "Profile Settings",
+    "description": "Update your profile information",
+    "avatarUrl": "Avatar URL",
+    "emailCannotChange": "Email cannot be changed",
+    "updateSuccess": "Profile updated successfully",
+    "updateError": "Failed to update profile"
   },
   "chat": {
     "title": "Chat",

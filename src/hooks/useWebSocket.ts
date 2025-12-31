@@ -25,7 +25,7 @@ export function useWebSocket(
     onOnlineStatusRef.current = onOnlineStatus
   }, [onMessage, onOnlineStatus])
 
-  const connect = useCallback(() => {
+  const connect = useCallback(async () => {
     console.log('🔌 WebSocket connect attempt:', {
       hasUser: !!user,
       userId: user?.id,
@@ -37,10 +37,20 @@ export function useWebSocket(
       return
     }
 
-    const accessToken = sessionStorage.getItem('access_token')
+    let accessToken = sessionStorage.getItem('access_token')
     if (!accessToken) {
-      console.warn('❌ No access token found, cannot connect WebSocket')
-      return
+      console.warn('❌ No access token found, trying to refresh...')
+      // Try to refresh token
+      try {
+        const { authService } = await import('@/services/authService')
+        const response = await authService.refreshToken()
+        accessToken = response.access_token
+        sessionStorage.setItem('access_token', accessToken)
+        console.log('✅ Token refreshed successfully')
+      } catch (error) {
+        console.error('❌ Failed to refresh token:', error)
+        return
+      }
     }
 
     console.log('✅ User and token available, connecting...')
@@ -54,11 +64,12 @@ export function useWebSocket(
 
       // Connect to WebSocket
       const wsUrl = API_BASE_URL.replace('http://', 'ws://').replace('https://', 'wss://')
-      const wsEndpoint = `${wsUrl}/api/v1/ws/${user.id}?token=${accessToken}`
+      const wsEndpoint = `${wsUrl}/api/v1/ws/${user.id}?token=${encodeURIComponent(accessToken)}`
       console.log('🔌 Attempting WebSocket connection:', {
         endpoint: `${wsUrl}/api/v1/ws/${user.id}?token=***`,
         userId: user.id,
         hasToken: !!accessToken,
+        tokenLength: accessToken.length,
       })
       const ws = new WebSocket(wsEndpoint)
 
@@ -120,10 +131,26 @@ export function useWebSocket(
         }
       }
 
-      ws.onerror = (error) => {
+      ws.onerror = async (error) => {
         console.error('❌ WebSocket error:', error)
         console.error('WebSocket URL:', `${wsUrl}/api/v1/ws/${user.id}?token=${accessToken.substring(0, 20)}...`)
         setIsConnected(false)
+        
+        // If error occurs, try to refresh token and reconnect once
+        if (reconnectAttemptsRef.current === 0) {
+          console.log('🔄 Attempting to refresh token and reconnect...')
+          try {
+            const { authService } = await import('@/services/authService')
+            const response = await authService.refreshToken()
+            const newToken = response.access_token
+            sessionStorage.setItem('access_token', newToken)
+            console.log('✅ Token refreshed, will retry connection')
+            // Reset reconnect attempts to allow one more try
+            reconnectAttemptsRef.current = -1
+          } catch (refreshError) {
+            console.error('❌ Failed to refresh token:', refreshError)
+          }
+        }
       }
 
       ws.onclose = (event) => {
@@ -145,7 +172,7 @@ export function useWebSocket(
           const delay = Math.min(3000 * reconnectAttemptsRef.current, 30000) // Exponential backoff, max 30s
           console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`)
           reconnectTimeoutRef.current = window.setTimeout(() => {
-            connect()
+            void connect()
           }, delay)
         } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
           console.error('Max reconnection attempts reached')
@@ -162,7 +189,7 @@ export function useWebSocket(
   useEffect(() => {
     if (user?.id) {
       console.log('🚀 Starting WebSocket connection for user:', user.id)
-      connect()
+      void connect()
     }
     // Silently skip if user is not loaded yet (will retry when user loads)
     // This is normal during initial render

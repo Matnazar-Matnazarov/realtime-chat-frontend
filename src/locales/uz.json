@@ -6,6 +6,8 @@
     "email": "Email",
     "password": "Parol",
     "username": "Foydalanuvchi nomi",
+    "firstName": "Ism",
+    "lastName": "Familiya",
     "submit": "Yuborish",
     "cancel": "Bekor qilish",
     "save": "Saqlash",
@@ -20,10 +22,22 @@
   "auth": {
     "loginTitle": "Hisobingizga kiring",
     "registerTitle": "Hisob yarating",
+    "registerDescription": "Hisob yaratish uchun ma'lumotlaringizni kiriting",
     "loginSuccess": "Muvaffaqiyatli kirildi!",
     "loginFailed": "Kirish muvaffaqiyatsiz",
     "logoutSuccess": "Muvaffaqiyatli chiqildi",
-    "invalidCredentials": "Noto'g'ri foydalanuvchi nomi yoki parol"
+    "invalidCredentials": "Noto'g'ri foydalanuvchi nomi yoki parol",
+    "confirmPassword": "Parolni tasdiqlang",
+    "alreadyHaveAccount": "Hisobingiz bormi?",
+    "dontHaveAccount": "Hisobingiz yo'qmi?"
+  },
+  "profile": {
+    "title": "Profil sozlamalari",
+    "description": "Profil ma'lumotlaringizni yangilang",
+    "avatarUrl": "Avatar URL",
+    "emailCannotChange": "Email o'zgartirib bo'lmaydi",
+    "updateSuccess": "Profil muvaffaqiyatli yangilandi",
+    "updateError": "Profilni yangilashda xato"
   },
   "chat": {
     "title": "Chat",

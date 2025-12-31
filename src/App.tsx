@@ -6,8 +6,10 @@ import { ThemeProvider } from './providers/ThemeProvider'
 import { I18nProvider } from './providers/I18nProvider'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { LoginPage } from '@/pages/auth/LoginPage'
+import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { AdminDashboard } from '@/pages/admin/AdminDashboard'
 import { ChatPage } from '@/pages/chat/ChatPage'
+import { ProfileSettingsPage } from '@/pages/settings/ProfileSettingsPage'
 
 function App() {
   return (
@@ -18,6 +20,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/chat" replace />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
               <Route
                 path="/chat"
                 element={
@@ -31,6 +34,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings/profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfileSettingsPage />
                   </ProtectedRoute>
                 }
               />
